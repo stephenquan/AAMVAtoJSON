@@ -1,0 +1,41 @@
+{
+  "header": {
+    "AAMVAVersion": 8,
+    "IIN": "636000",
+    "jurisdictionVersion": 0,
+    "numberOfEntries": 2
+  },
+  "DL": {
+    "DAQ": "T64235789L",
+    "DCS": "SAMPLE",
+    "DDE": "NL",
+    "DAC": "MICHAEL",
+    "DDF": "N",
+    "DAD": "JOHN",
+    "DDG": "N",
+    "DCU": "JR",
+    "DCA": "D",
+    "DCB": "K",
+    "DCD": "PH",
+    "DBD": "06062008",
+    "DBB": "06061986",
+    "DBA": "12102013",
+    "DBC": "1",
+    "DAU": "068 in",
+    "DAY": "BRO",
+    "DAG": "2300 WEST BROAD STREET",
+    "DAI": "RICHMOND",
+    "DAJ": "VA",
+    "DAK": "232690000",
+    "DCF": "2424244747474786102204",
+    "DCG": "USA",
+    "DCK": "123456789",
+    "DDA": "M",
+    "DDB": "06062008",
+    "DDC": "06062009",
+    "DDD": "1"
+  },
+  "ZV": {
+    "ZVA": "01"
+  }
+}
