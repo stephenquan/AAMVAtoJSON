@@ -16,12 +16,15 @@ function AAMVAtoJSON(data) {
     for (var i = 0; i < obj.header.numberOfEntries; i++) {
         var offset = 21 + i * 10;
         m = data.substring(offset, offset + 10).match(/(.{2})(\d{4})(\d{4})/);
-        var header = {
-            subfileType: m[1],
-            offset: parseInt(m[2]),
-            length: parseInt(m[3])
-        };
-        obj[header.subfileType] = data.substring(header.offset + 2, header.offset + header.length - 1).split("\n").reduce(function (p, c) {
+        var subfileType = m[1];
+        var offset = parseInt(m[2]);
+        var length = parseInt(m[3]);
+        if (i === 0) {
+          obj.files = [ subfileType ];
+        } else {
+          obj.files.push(subfileType);
+        }
+        obj[subfileType] = data.substring(offset + 2, offset + length - 1).split("\n").reduce(function (p, c) {
             p[c.substring(0,3)] = c.substring(3);
             return p;
         }, { } );
