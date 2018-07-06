@@ -5,6 +5,10 @@
     "jurisdictionVersion": 0,
     "numberOfEntries": 2
   },
+  "files": [
+    "DL",
+    "ZV"
+  ],
   "DL": {
     "DAQ": "T64235789L",
     "DCS": "SAMPLE",
