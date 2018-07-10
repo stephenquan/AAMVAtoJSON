@@ -30,5 +30,15 @@ function AAMVAtoJSON(data) {
         }, { } );
     }
 
+    // Convert from US MM/DD/CCYY date to UTC millisecond date
+    if (obj.DL) {
+        ["DBA", "DBB", "DBD", "DDB", "DDC", "DDH", "DDI", "DDJ"].forEach(function (k) {
+            if (!obj.DL[k]) return;
+            m = obj.DL[k].match(/(\d{2})(\d{2})(\d{4})/);
+            if (!m) return;
+            obj.DL[k] = (new Date(m[3] + "-" + m[1] + "-" + m[2])).getTime();
+        } );
+    }
+    
     return obj;
 }
