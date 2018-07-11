@@ -24,7 +24,7 @@ function AAMVAtoJSON(data) {
         } else {
           obj.files.push(subfileType);
         }
-        obj[subfileType] = data.substring(offset + 2, offset + length - 1).split("\n").reduce(function (p, c) {
+        obj[subfileType] = data.substring(offset + 2, offset + length).trim().split(/\n\r?/).reduce(function (p, c) {
             p[c.substring(0,3)] = c.substring(3);
             return p;
         }, { } );
