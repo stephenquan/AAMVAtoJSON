@@ -1,5 +1,10 @@
 function AAMVAtoJSON(data) {
-    var m = data.match(/^@\n\u001e\r(ANSI )(\d{6})(\d{2})(\d{2})(\d{2})/);
+    // Detect AAMVA header:
+    //   1. First two characters: "@\n"
+    //   2. Third character should be 0x1e but we ignore because of South Carolina 0x1c edge condition
+    //   3. Next 5 characters either "ANSI " or "AAMVA"
+    //   4. Next 12 characters: IIN, AAMVAVersion, JurisdictionVersion, numberOfEntries
+    var m = data.match(/^@\n.\r(ANSI |AAMVA)(\d{6})(\d{2})(\d{2})(\d{2})/);
     if (!m) {
         return null;
     }
