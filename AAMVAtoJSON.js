@@ -4,48 +4,46 @@ function AAMVAtoJSON(data) {
     //   2. Third character should be 0x1e but we ignore because of South Carolina 0x1c edge condition
     //   3. Next 5 characters either "ANSI " or "AAMVA"
     //   4. Next 12 characters: IIN, AAMVAVersion, JurisdictionVersion, numberOfEntries
-    var m = data.match(/^@\n.\r(ANSI |AAMVA)(\d{6})(\d{2})(\d{2})(\d{2})/);
-    if (!m) {
-        return null
-    }
+    const [ __data,
+            AAMVAType,
+            IIN,
+            AAMVAVersion,
+            jurisdictionVersion,
+            numberOfEntries ] = data.match(/^@\n.\r(ANSI |AAMVA)(\d{6})(\d{2})(\d{2})(\d{2})/);
+    if (!__data) return null
 
     var obj = {
         header: {
-            IIN: m[2],
-            AAMVAVersion: parseInt(m[3]),
-            jurisdictionVersion: parseInt(m[4]),
-            numberOfEntries: parseInt(m[5])
+            IIN: IIN,
+            AAMVAVersion: +AAMVAVersion,
+            jurisdictionVersion: +jurisdictionVersion,
+            numberOfEntries: +numberOfEntries
         }
-    };
+    }
 
-    for (var i = 0; i < obj.header.numberOfEntries; i++) {
-        var offset = 21 + i * 10
-        m = data.substring(offset, offset + 10).match(/(.{2})(\d{4})(\d{4})/)
-        var subfileType = m[1]
-        var offset = parseInt(m[2])
-        var length = parseInt(m[3])
-        if (i === 0) {
-          obj.files = [ subfileType ]
-        } else {
-          obj.files.push(subfileType)
-        }
-        obj[subfileType] = data.substring(offset + 2, offset + length).trim().split(/\n\r?/).reduce(function (p, c) {
-            p[c.substring(0,3)] = c.substring(3);
-            return p;
+    for (let i = 0; i < obj.header.numberOfEntries; i++) {
+        let entryOffset = 21 + i * 10
+        let [ __entry, subfileType, offset, length ]
+            = data.substring(entryOffset, entryOffset + 10).match(/(.{2})(\d{4})(\d{4})/)
+        if (i === 0) obj.files = [ ]
+        obj.files.push(subfileType)
+        obj[subfileType] = data.substring(+offset + 2, +offset + +length).trim().split(/\n\r?/).reduce((p, c) => {
+            p[c.substring(0,3)] = c.substring(3)
+            return p
         }, { } )
     }
 
     // Convert date string (in local timezone) into Javascript UTC time
     function convertAAMVADate(str, country) {
         function convertAAMVADateUSA(str) {
-            var m = str.match(/(\d{2})(\d{2})(\d{4})/)
-            if (!m) return null
-            return new Date(parseInt(m[3]), parseInt(m[1]) - 1, parseInt(m[2])).getTime()
+            const [ __str, month, day, year ] = str.match(/(\d{2})(\d{2})(\d{4})/)
+            if (!__str) return null
+            return new Date(year, month-1, day).getTime()
         }
         function convertAAMVADateCAN(str) {
-            var m = str.match(/(\d{4})(\d{2})(\d{2})/)
-            if (!m) return null
-            return new Date(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3])).getTime()
+            const [ __str, year, month, day ] = str.match(/(\d{4})(\d{2})(\d{2})/)
+            if (!__str) return null
+            return new Date(year, month-1, day).getTime()
         }
         switch (country) {
         case "USA": return convertAAMVADateUSA(str)
@@ -55,12 +53,12 @@ function AAMVAtoJSON(data) {
     } 
     
     if (obj.DL) {
-        ["DBA", "DBB", "DBD", "DDB", "DDC", "DDH", "DDI", "DDJ"].forEach(function (k) {
-            if (!obj.DL[k]) return
-            var t = convertAAMVADate(obj.DL[k], obj.DL.DCG)
-            if (!t) return
+        for (let k of ["DBA", "DBB", "DBD", "DDB", "DDC", "DDH", "DDI", "DDJ"]) {
+            if (!obj.DL[k]) continue
+            const t = convertAAMVADate(obj.DL[k], obj.DL.DCG)
+            if (!t) continue
             obj.DL[k] = t
-        } )
+        }
     }
     
     return obj
