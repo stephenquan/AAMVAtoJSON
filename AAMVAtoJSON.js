@@ -35,20 +35,29 @@ function AAMVAtoJSON(data) {
         }, { } )
     }
 
-    // Convert from US MM/DD/CCYY date in local timezone
-    function patchDate(str) {
-        var m = str.match(/(\d{2})(\d{2})(\d{4})/)
-        if (!m) return null
-        var d = new Date(m[3] + "-" + m[1] + "-" + m[2])
-        var offset = d.getTimezoneOffset() * 60 * 1000
-        d.setTime(d.getTime() + offset)
-        return d.getTime()
-    }    
+    // Convert date string (in local timezone) into Javascript UTC time
+    function convertAAMVADate(str, country) {
+        function convertAAMVADateUSA(str) {
+            var m = str.match(/(\d{2})(\d{2})(\d{4})/)
+            if (!m) return null
+            return new Date(parseInt(m[3]), parseInt(m[1]) - 1, parseInt(m[2])).getTime()
+        }
+        function convertAAMVADateCAN(str) {
+            var m = str.match(/(\d{4})(\d{2})(\d{2})/)
+            if (!m) return null
+            return new Date(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3])).getTime()
+        }
+        switch (country) {
+        case "USA": return convertAAMVADateUSA(str)
+        case "CAN": return convertAAMVADateCAN(str)
+        default: return convertAAMVADateUSA(str)
+        }
+    } 
     
     if (obj.DL) {
         ["DBA", "DBB", "DBD", "DDB", "DDC", "DDH", "DDI", "DDJ"].forEach(function (k) {
             if (!obj.DL[k]) return
-            var t = patchDate(obj.DL[k])
+            var t = convertAAMVADate(obj.DL[k], obj.DL.DCG)
             if (!t) return
             obj.DL[k] = t
         } )
