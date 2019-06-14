@@ -9,7 +9,7 @@ function AAMVAtoJSON(data) {
             IIN,
             AAMVAVersion,
             jurisdictionVersion,
-            numberOfEntries ] = data.match(/^@\n.\r(ANSI |AAMVA)(\d{6})(\d{2})(\d{2})(\d{2})/);
+            numberOfEntries ] = data.match(/^@\n.\r(ANSI |AAMVA)(\d{6})(\d{2})(\d{2})(\d{2})/) || [ ]
     if (!__data) return null
 
     var obj = {
@@ -24,7 +24,7 @@ function AAMVAtoJSON(data) {
     for (let i = 0; i < obj.header.numberOfEntries; i++) {
         let entryOffset = 21 + i * 10
         let [ __entry, subfileType, offset, length ]
-            = data.substring(entryOffset, entryOffset + 10).match(/(.{2})(\d{4})(\d{4})/)
+            = data.substring(entryOffset, entryOffset + 10).match(/(.{2})(\d{4})(\d{4})/) || [ ]
         if (i === 0) obj.files = [ ]
         obj.files.push(subfileType)
         obj[subfileType] = data.substring(+offset + 2, +offset + +length).trim().split(/\n\r?/).reduce((p, c) => {
@@ -36,12 +36,12 @@ function AAMVAtoJSON(data) {
     // Convert date string (in local timezone) into Javascript UTC time
     function convertAAMVADate(str, country) {
         function convertAAMVADateUSA(str) {
-            const [ __str, month, day, year ] = str.match(/(\d{2})(\d{2})(\d{4})/)
+            const [ __str, month, day, year ] = str.match(/(\d{2})(\d{2})(\d{4})/) || [ ]
             if (!__str) return null
             return new Date(year, month-1, day).getTime()
         }
         function convertAAMVADateCAN(str) {
-            const [ __str, year, month, day ] = str.match(/(\d{4})(\d{2})(\d{2})/)
+            const [ __str, year, month, day ] = str.match(/(\d{4})(\d{2})(\d{2})/) || [ ]
             if (!__str) return null
             return new Date(year, month-1, day).getTime()
         }
