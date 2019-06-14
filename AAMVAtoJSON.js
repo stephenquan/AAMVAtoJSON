@@ -12,18 +12,18 @@ function AAMVAtoJSON(data, options = { format: "string" } ) {
             numberOfEntries ] = data.match(/^@\n.\r(ANSI |AAMVA)(\d{6})(\d{2})(\d{2})(\d{2})/) || [ ]
     if (!__data) return null
 
-    var obj = {
+    let obj = {
         header: {
+            AAMVAType: AAMVAType,
             IIN: IIN,
             AAMVAVersion: +AAMVAVersion,
-            jurisdictionVersion: +jurisdictionVersion,
-            numberOfEntries: +numberOfEntries
+            jurisdictionVersion: +jurisdictionVersion
         }
     }
 
-    for (let i = 0; i < obj.header.numberOfEntries; i++) {
-        let entryOffset = 21 + i * 10
-        let [ __entry, subfileType, offset, length ]
+    for (let i = 0; i < +numberOfEntries; i++) {
+        const entryOffset = 21 + i * 10
+        const [ __entry, subfileType, offset, length ]
             = data.substring(entryOffset, entryOffset + 10).match(/(.{2})(\d{4})(\d{4})/) || [ ]
         if (i === 0) obj.files = [ ]
         obj.files.push(subfileType)
