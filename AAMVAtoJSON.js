@@ -4,30 +4,30 @@ function AAMVAtoJSON(data, options = { format: "string" } ) {
     //   2. Third character should be 0x1e but we ignore because of South Carolina 0x1c edge condition
     //   3. Next 5 characters either "ANSI " or "AAMVA"
     //   4. Next 12 characters: IIN, AAMVAVersion, JurisdictionVersion, numberOfEntries
-    const [ __data,
-            AAMVAType,
-            IIN,
-            AAMVAVersion,
-            jurisdictionVersion,
-            numberOfEntries ] = data.match(/^@\n.\r(ANSI |AAMVA)(\d{6})(\d{2})(\d{2})(\d{2})/) || [ ]
-    if (!__data) return null
+    let [ , AAMVAType, IIN, AAMVAVersion, jurisdictionVersion, numberOfEntries ]
+        = data.match(/^@\n.\r(ANSI |AAMVA)(\d{6})(\d{2})(\d{2})(\d{2})/) || [ ]
+    if (!AAMVAType) return null
+    AAMVAVersion = +AAMVAVersion
+    jurisdictionVersion = +jurisdictionVersion
 
     let obj = {
         header: {
             AAMVAType: AAMVAType,
             IIN: IIN,
-            AAMVAVersion: +AAMVAVersion,
-            jurisdictionVersion: +jurisdictionVersion
+            AAMVAVersion: AAMVAVersion,
+            jurisdictionVersion: jurisdictionVersion
         }
     }
 
-    for (let i = 0; i < +numberOfEntries; i++) {
+    for (let i = 0; i < numberOfEntries; i++) {
         const entryOffset = 21 + i * 10
-        const [ __entry, subfileType, offset, length ]
+        let [ , subfileType, offset, length ]
             = data.substring(entryOffset, entryOffset + 10).match(/(.{2})(\d{4})(\d{4})/) || [ ]
+        offset = +offset
+        length = +length
         if (i === 0) obj.files = [ ]
         obj.files.push(subfileType)
-        obj[subfileType] = data.substring(+offset + 2, +offset + +length).trim().split(/\n\r?/).reduce((p, c) => {
+        obj[subfileType] = data.substring(offset + 2, offset + length).trim().split(/\n\r?/).reduce((p, c) => {
             p[c.substring(0,3)] = c.substring(3)
             return p
         }, { } )
