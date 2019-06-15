@@ -4,9 +4,8 @@ function AAMVAtoJSON(data, options = { format: "string" } ) {
     //   2. Third character should be 0x1e but we ignore because of South Carolina 0x1c edge condition
     //   3. Next 5 characters either "ANSI " or "AAMVA"
     //   4. Next 12 characters: IIN, AAMVAVersion, JurisdictionVersion, numberOfEntries
-    let [ , AAMVAType, IIN, AAMVAVersion, jurisdictionVersion, numberOfEntries ]
-        = data.match(/^@\n.\r(ANSI |AAMVA)(\d{6})(\d{2})(\d{2})(\d{2})/) || [ ]
-    if (!AAMVAType) return null
+    let [ header, AAMVAType, IIN, AAMVAVersion, jurisdictionVersion, numberOfEntries ]
+        = data.match(/^@\n.\r(ANSI |AAMVA)(\d{6})(\d{2})(\d{2})(\d{2})?/) || [ ]
     AAMVAVersion = +AAMVAVersion
     jurisdictionVersion = +jurisdictionVersion
 
@@ -19,10 +18,11 @@ function AAMVAtoJSON(data, options = { format: "string" } ) {
         }
     }
 
-    for (let i = 0; i < numberOfEntries; i++) {
-        const entryOffset = 21 + i * 10
+    for (let i = 0; !numberOfEntries || i < numberOfEntries; i++) {
+        const entryOffset = header.length + i * 10
         let [ , subfileType, offset, length ]
             = data.substring(entryOffset, entryOffset + 10).match(/(.{2})(\d{4})(\d{4})/) || [ ]
+        if (!subfileType) break
         offset = +offset
         length = +length
         if (i === 0) obj.files = [ ]
@@ -35,20 +35,20 @@ function AAMVAtoJSON(data, options = { format: "string" } ) {
 
     // Convert date string (in local timezone) into Javascript UTC time
     function convertAAMVADate(str, country) {
-        function convertAAMVADateUSA(str) {
+        function convertMMDDCCYY(str) {
             const [ __str, month, day, year ] = str.match(/(\d{2})(\d{2})(\d{4})/) || [ ]
             if (!__str) return null
             return new Date(year, month-1, day).getTime()
         }
-        function convertAAMVADateCAN(str) {
+        function convertCCYYMMDD(str) {
             const [ __str, year, month, day ] = str.match(/(\d{4})(\d{2})(\d{2})/) || [ ]
             if (!__str) return null
             return new Date(year, month-1, day).getTime()
         }
         switch (country) {
-        case "USA": return convertAAMVADateUSA(str)
-        case "CAN": return convertAAMVADateCAN(str)
-        default: return convertAAMVADateUSA(str)
+        case "USA": return convertMMDDCCYY(str)
+        case "CAN": return convertCCYYMMDD(str)
+        default: return convertCCYYMMDD(str)
         }
     } 
     
