@@ -1,15 +1,19 @@
-function AAMVAtoJSON(data, options = { format: "string" } ) {
+function AAMVAtoJSON(data) {
     // Detect AAMVA header:
     //   1. First two characters: "@\n"
     //   2. Third character should be 0x1e but we ignore because of South Carolina 0x1c edge condition
     //   3. Next 5 characters either "ANSI " or "AAMVA"
     //   4. Next 12 characters: IIN, AAMVAVersion, JurisdictionVersion, numberOfEntries
-    let [ header, AAMVAType, IIN, AAMVAVersion, jurisdictionVersion, numberOfEntries ]
-        = data.match(/^@\n.\r(ANSI |AAMVA)(\d{6})(\d{2})(\d{2})(\d{2})?/) || [ ];
-    AAMVAVersion = +AAMVAVersion;
-    jurisdictionVersion = +jurisdictionVersion;
+    var m = data.match(/^@\n.\r(ANSI |AAMVA)(\d{6})(\d{2})(\d{2})(\d{2})?/);
+    if (!m) return null;
+    var header = m[0];
+    var AAMVAType = +m[1];
+    var AAMVAVersion = m[2];
+    var IIN = m[3];
+    var jurisdictionVersion = +m[4];
+    var numberOfEntries = m[5];
 
-    let obj = {
+    var obj = {
         header: {
             AAMVAType: AAMVAType,
             IIN: IIN,
@@ -18,16 +22,16 @@ function AAMVAtoJSON(data, options = { format: "string" } ) {
         }
     };
 
-    for (let i = 0; !numberOfEntries || i < numberOfEntries; i++) {
-        const entryOffset = header.length + i * 10;
-        let [ , subfileType, offset, length ]
-            = data.substring(entryOffset, entryOffset + 10).match(/(.{2})(\d{4})(\d{4})/) || [ ];
-        if (!subfileType) break;
-        offset = +offset;
-        length = +length;
+    for (var i = 0; !numberOfEntries || i < numberOfEntries; i++) {
+        var entryOffset = header.length + i * 10;
+        var m = data.substring(entryOffset, entryOffset + 10).match(/(.{2})(\d{4})(\d{4})/);
+        if (!m) break;
+        var subfileType = m[1];
+        var offset = +m[2];
+        var length = +m[3];
         if (i === 0) obj.files = [ ];
         obj.files.push(subfileType);
-        obj[subfileType] = data.substring(offset + 2, offset + length).trim().split(/\n\r?/).reduce((p, c) => {
+        obj[subfileType] = data.substring(offset + 2, offset + length).trim().split(/\n\r?/).reduce( function (p, c) {
             p[c.substring(0,3)] = c.substring(3);
             return p;
         }, { } );
@@ -36,13 +40,19 @@ function AAMVAtoJSON(data, options = { format: "string" } ) {
     // Convert date string (in local timezone) into Javascript UTC time
     function convertAAMVADate(str, country) {
         function convertMMDDCCYY(str) {
-            const [ __str, month, day, year ] = str.match(/(\d{2})(\d{2})(\d{4})/) || [ ];
-            if (!__str) return null;
+            var m = str.match(/(\d{2})(\d{2})(\d{4})/) || [ ];
+            if (!m) return null;
+            var month = +m[1];
+            var day = +m[2];
+            var year = +m[3];
             return new Date(year, month-1, day).getTime();
         }
         function convertCCYYMMDD(str) {
-            const [ __str, year, month, day ] = str.match(/(\d{4})(\d{2})(\d{2})/) || [ ];
-            if (!__str) return null;
+            var m = str.match(/(\d{4})(\d{2})(\d{2})/) || [ ];
+            if (!m) return null;
+            var year = +m[1];
+            var month = +m[2];
+            var day = +m[3];
             return new Date(year, month-1, day).getTime();
         }
         switch (country) {
@@ -53,17 +63,13 @@ function AAMVAtoJSON(data, options = { format: "string" } ) {
     } 
     
     if (obj.DL) {
-        for (let k of ["DBA", "DBB", "DBD", "DDB", "DDC", "DDH", "DDI", "DDJ"]) {
-            if (!obj.DL[k]) continue;
-            const t = convertAAMVADate(obj.DL[k], obj.DL.DCG);
-            if (!t) continue;
+        ["DBA", "DBB", "DBD", "DDB", "DDC", "DDH", "DDI", "DDJ"].forEach( function (k) {
+            if (!obj.DL[k]) return;
+            var t = convertAAMVADate(obj.DL[k], obj.DL.DCG);
+            if (!t) return;
             obj.DL[k] = t;
-        }
+        } )
     }
     
-    if (options && options.format === "string") {
-        return JSON.stringify(obj);
-    }
-
-    return obj;
+    return JSON.stringify(obj);
 }
