@@ -24,7 +24,7 @@ function AAMVAtoJSON(data) {
 
     for (var i = 0; !numberOfEntries || i < numberOfEntries; i++) {
         var entryOffset = header.length + i * 10;
-        var m = data.substring(entryOffset, entryOffset + 10).match(/(.{2})(\d{4})(\d{4})/);
+        m = data.substring(entryOffset, entryOffset + 10).match(/(.{2})(\d{4})(\d{4})/);
         if (!m) break;
         var subfileType = m[1];
         var offset = +m[2];
@@ -68,7 +68,7 @@ function AAMVAtoJSON(data) {
             var t = convertAAMVADate(obj.DL[k], obj.DL.DCG);
             if (!t) return;
             obj.DL[k] = t;
-        } )
+        } );
     }
     
     return JSON.stringify(obj);
