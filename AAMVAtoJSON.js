@@ -7,11 +7,11 @@ function AAMVAtoJSON(data) {
     var m = data.match(/^@\n.\r(ANSI |AAMVA)(\d{6})(\d{2})(\d{2})(\d{2})?/);
     if (!m) return null;
     var header = m[0];
-    var AAMVAType = +m[1];
+    var AAMVAType = m[1];
     var AAMVAVersion = m[2];
     var IIN = m[3];
     var jurisdictionVersion = +m[4];
-    var numberOfEntries = m[5];
+    var numberOfEntries = +m[5];
 
     var obj = {
         header: {
@@ -40,7 +40,7 @@ function AAMVAtoJSON(data) {
     // Convert date string (in local timezone) into Javascript UTC time
     function convertAAMVADate(str, country) {
         function convertMMDDCCYY(str) {
-            var m = str.match(/(\d{2})(\d{2})(\d{4})/) || [ ];
+            var m = str.match(/(\d{2})(\d{2})(\d{4})/);
             if (!m) return null;
             var month = +m[1];
             var day = +m[2];
@@ -48,7 +48,7 @@ function AAMVAtoJSON(data) {
             return new Date(year, month-1, day).getTime();
         }
         function convertCCYYMMDD(str) {
-            var m = str.match(/(\d{4})(\d{2})(\d{2})/) || [ ];
+            var m = str.match(/(\d{4})(\d{2})(\d{2})/);
             if (!m) return null;
             var year = +m[1];
             var month = +m[2];
