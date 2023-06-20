@@ -1,14 +1,16 @@
 function AAMVAtoJSON(data, options = { format: "string" } ) {
     // Detect AAMVA header:
-    //   1. First two characters: "@\n"
-    //   2. Third character should be 0x1e but we ignore because of South Carolina 0x1c edge condition
-    //   3. Next 5 characters either "ANSI " or "AAMVA"
-    //   4. Next 12 characters: IIN, AAMVAVersion, JurisdictionVersion, numberOfEntries
+    //   1. The first character must be: "@"
+    //   2. The next character should be "\n"
+    //   3. The third character should be 0x1e but we ignore it because of South Carolina 0x1c edge condition
+    //   4. The next character should be "\r"
+    //   5. Next 5 characters either "ANSI " or "AAMVA"
+    //   6. Next 12 characters: IIN, AAMVAVersion, JurisdictionVersion, numberOfEntries
+    //   N.B. Because of the South Carolina 0x1c edge conditions, we relax rules 2-4 with a generic `[^\w]+` to handle non-alphabetic sequences
     let [ header, AAMVAType, IIN, AAMVAVersion, jurisdictionVersion, numberOfEntries ]
-        = data.match(/^@\n.\r(ANSI |AAMVA)(\d{6})(\d{2})(\d{2})(\d{2})?/) || [ ];
+        = data.match(/^@[^\w]+(A....)(\d{6})(\d{2})(\d{2})(\d{2})?/) || [ ];
     AAMVAVersion = +AAMVAVersion;
     jurisdictionVersion = +jurisdictionVersion;
-
     let obj = {
         header: {
             AAMVAType: AAMVAType,
@@ -17,7 +19,6 @@ function AAMVAtoJSON(data, options = { format: "string" } ) {
             jurisdictionVersion: jurisdictionVersion
         }
     };
-
     for (let i = 0; !numberOfEntries || i < numberOfEntries; i++) {
         const entryOffset = header.length + i * 10;
         let [ , subfileType, offset, length ]
@@ -32,7 +33,6 @@ function AAMVAtoJSON(data, options = { format: "string" } ) {
             return p;
         }, { } );
     }
-
     // Convert date string (in local timezone) into Javascript UTC time
     function convertAAMVADate(str, country) {
         function convertMMDDCCYY(str) {
@@ -51,7 +51,6 @@ function AAMVAtoJSON(data, options = { format: "string" } ) {
         default: return convertCCYYMMDD(str);
         }
     } 
-    
     if (obj.DL) {
         for (let k of ["DBA", "DBB", "DBD", "DDB", "DDC", "DDH", "DDI", "DDJ"]) {
             if (!obj.DL[k]) continue;
@@ -60,10 +59,8 @@ function AAMVAtoJSON(data, options = { format: "string" } ) {
             obj.DL[k] = t;
         }
     }
-    
     if (options && options.format === "string") {
         return JSON.stringify(obj);
     }
-
     return obj;
 }
